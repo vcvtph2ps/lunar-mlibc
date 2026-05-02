@@ -2,6 +2,7 @@
 #include <bits/ensure.h>
 #include <dirent.h>
 #include <errno.h>
+#include <limits.h>
 #include <lunar/syscall.h>
 #include <mlibc/all-sysdeps.hpp>
 #include <mlibc/debug.hpp>
@@ -18,6 +19,9 @@
 		__ensure(!"STUB function was called");                                                     \
 		__builtin_unreachable();                                                                   \
 	})
+
+#define STUB_WARN()                                                                                \
+	({ __ensure_warn("STUB function was called", __FILE__, __LINE__, __PRETTY_FUNCTION__); })
 
 namespace mlibc {
 
@@ -137,14 +141,115 @@ int Sysdeps<AnonFree>::operator()(void *pointer, size_t size) {
 	return sysdep<VmUnmap>(pointer, size);
 }
 
-int Sysdeps<FutexWait>::operator()(int *pointer, int expected, const struct timespec *time) {
-	STUB();
+int Sysdeps<ClockGet>::operator()(int clock, time_t *secs, long *nanos) {
+	struct timespec ts;
+
+	long ret;
+	bool err = syscall(SYSCALL_CLOCK_GET, &ret, clock, (uint64_t)&ts);
+	if (err) {
+		return ret;
+	}
+
+	*secs = ts.tv_sec;
+	*nanos = ts.tv_nsec;
+	return 0;
 }
 
-int Sysdeps<ClockGet>::operator()(int clock, time_t *secs, long *nanos) { STUB(); }
+int Sysdeps<FutexWait>::operator()(int *pointer, int expected, const struct timespec *time) {
+	long ret;
+	bool err = syscall(
+	    SYSCALL_FUTEX, &ret, (uint64_t)pointer, FUTEX_WAIT, (uint64_t)expected, (uint64_t)time
+	);
+	if (err) {
+		return ret;
+	}
+	return 0;
+}
 
-int Sysdeps<FutexWake>::operator()(int *pointer, bool all) { STUB(); }
+int Sysdeps<FutexWake>::operator()(int *pointer, bool all) {
+	long ret;
+	int32_t val = all ? INT32_MAX : 1;
+	syscall(SYSCALL_FUTEX, &ret, (uint64_t)pointer, FUTEX_WAKE, (uint64_t)val);
+	return 0;
+}
 
+pid_t Sysdeps<GetPid>::operator()() {
+	long ret;
+	bool err = syscall(SYSCALL_GET_PROCESS_INFO, &ret, SYSCALL_GET_PROCESS_INFO_PID);
+	if (err) {
+		return ret;
+	}
+	return ret;
+}
+
+gid_t Sysdeps<GetGid>::operator()() {
+	long ret;
+	bool err = syscall(SYSCALL_GET_PROCESS_INFO, &ret, SYSCALL_GET_PROCESS_INFO_GID);
+	if (err) {
+		return ret;
+	}
+	return ret;
+}
+gid_t Sysdeps<GetEgid>::operator()() {
+	long ret;
+	bool err = syscall(SYSCALL_GET_PROCESS_INFO, &ret, SYSCALL_GET_PROCESS_INFO_EGID);
+	if (err) {
+		return ret;
+	}
+	return ret;
+}
+uid_t Sysdeps<GetUid>::operator()() {
+	long ret;
+	bool err = syscall(SYSCALL_GET_PROCESS_INFO, &ret, SYSCALL_GET_PROCESS_INFO_UID);
+	if (err) {
+		return ret;
+	}
+	return ret;
+}
+uid_t Sysdeps<GetEuid>::operator()() {
+	long ret;
+	bool err = syscall(SYSCALL_GET_PROCESS_INFO, &ret, SYSCALL_GET_PROCESS_INFO_EUID);
+	if (err) {
+		return ret;
+	}
+	return ret;
+}
+
+pid_t Sysdeps<GetPpid>::operator()() {
+	long ret;
+	bool err = syscall(SYSCALL_GET_PROCESS_INFO, &ret, SYSCALL_GET_PROCESS_INFO_PPID);
+	if (err) {
+		return ret;
+	}
+	return ret;
+}
+
+int Sysdeps<GetPgid>::operator()(pid_t pid, pid_t *pgid) {
+	long ret;
+	bool err = syscall(SYSCALL_GET_PROCESS_INFO, &ret, SYSCALL_GET_PROCESS_INFO_GET_PGID, pid);
+	if (err) {
+		return ret;
+	}
+	*pgid = ret;
+	return 0;
+}
+int Sysdeps<SetPgid>::operator()(pid_t pid, pid_t pgid) {
+	long ret;
+	bool err =
+	    syscall(SYSCALL_GET_PROCESS_INFO, &ret, SYSCALL_GET_PROCESS_INFO_SET_PGID, pid, pgid);
+	if (err) {
+		return ret;
+	}
+	return ret;
+}
+int Sysdeps<GetCwd>::operator()(char *buf, size_t size) {
+	long ret;
+	bool err = syscall(SYSCALL_GET_CWD, &ret, (uint64_t)buf, size);
+	if (err) {
+		return ret;
+	}
+	return 0;
+}
 int Sysdeps<Dup2>::operator()(int fd, int flags, int newfd) { STUB(); }
 int Sysdeps<Stat>::operator()(
     fsfd_target fsfdt, int fd, const char *path, int flags, struct stat *statbuf
