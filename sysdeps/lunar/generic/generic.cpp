@@ -254,6 +254,37 @@ int Sysdeps<Dup2>::operator()(int fd, int flags, int newfd) { STUB(); }
 int Sysdeps<Stat>::operator()(
     fsfd_target fsfdt, int fd, const char *path, int flags, struct stat *statbuf
 ) {
-	STUB();
+	long ret;
+	bool err;
+	switch (fsfdt) {
+		case fsfd_target::path:
+			err = syscall(
+			    SYSCALL_STAT_AT,
+			    &ret,
+			    AT_FDCWD,
+			    (uint64_t)path,
+			    strlen(path),
+			    (uint64_t)statbuf,
+			    flags
+			);
+			break;
+		case fsfd_target::fd:
+			err = syscall(SYSCALL_STAT, &ret, fd, (uint64_t)statbuf);
+			break;
+		case fsfd_target::fd_path:
+			err = syscall(
+			    SYSCALL_STAT_AT, &ret, fd, (uint64_t)path, strlen(path), (uint64_t)statbuf, flags
+			);
+			break;
+		default:
+			mlibc::infoLogger() << "mlibc: stat: Unknown fsfd_target: " << (int)fsfdt
+			                    << frg::endlog;
+			return ENOSYS;
+	}
+
+	if (err) {
+		return ret;
+	}
+	return 0;
 }
 } // namespace mlibc
