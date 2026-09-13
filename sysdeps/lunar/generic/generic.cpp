@@ -19,6 +19,8 @@
 		__builtin_unreachable();                                                                   \
 	})
 
+#define STUB_WARN() ({ sysdep<LibcLog>("STUB function was called"); })
+
 namespace mlibc {
 
 [[noreturn]] void Sysdeps<Exit>::operator()(int status) {
@@ -149,6 +151,7 @@ int Sysdeps<Dup2>::operator()(int fd, int flags, int newfd) { STUB(); }
 int Sysdeps<Stat>::operator()(
     fsfd_target fsfdt, int fd, const char *path, int flags, struct stat *statbuf
 ) {
-	STUB();
+	STUB_WARN();
+	return ENOSYS;
 }
 } // namespace mlibc
