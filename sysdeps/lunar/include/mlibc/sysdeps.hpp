@@ -28,4 +28,8 @@ struct LunarSysdepTags : LibcPanic,
 template <typename Tag>
 using Sysdeps = SysdepOf<LunarSysdepTags, Tag>;
 
+struct SysdepTraits {
+	static constexpr bool usesRtNetlink = false;
+};
+
 } // namespace mlibc
