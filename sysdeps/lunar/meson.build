@@ -72,8 +72,7 @@ if not no_headers
         follow_symlinks: true,
     )
     install_headers('include/lunar/syscall.h', subdir: 'lunar', follow_symlinks: true)
-    install_headers('include/sys/sysmacros.h', subdir: 'sys', follow_symlinks: true)
-
+    install_headers('include/sys/sysmacros.h', subdir: 'sys')
 endif
 
 if not headers_only
