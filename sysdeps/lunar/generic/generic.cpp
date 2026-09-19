@@ -19,7 +19,8 @@
 		__builtin_unreachable();                                                                   \
 	})
 
-#define STUB_WARN() ({ sysdep<LibcLog>("STUB function was called"); })
+#define STUB_WARN()                                                                                \
+	({ __ensure_warn("STUB function was called", __FILE__, __LINE__, __PRETTY_FUNCTION__); })
 
 namespace mlibc {
 
@@ -143,7 +144,10 @@ int Sysdeps<FutexWait>::operator()(int *pointer, int expected, const struct time
 	STUB();
 }
 
-int Sysdeps<ClockGet>::operator()(int clock, time_t *secs, long *nanos) { STUB(); }
+int Sysdeps<ClockGet>::operator()(int clock, time_t *secs, long *nanos) {
+	STUB_WARN();
+	return ENOSYS;
+}
 
 int Sysdeps<FutexWake>::operator()(int *pointer, bool all) { STUB(); }
 
