@@ -25,13 +25,13 @@
 namespace mlibc {
 
 [[noreturn]] void Sysdeps<Exit>::operator()(int status) {
-	syscall(SYSCALL_EXIT, NULL, status);
+	syscall(SYSCALL_PROC_EXIT, NULL, status);
 	__builtin_unreachable();
 }
 
 void Sysdeps<LibcLog>::operator()(const char *message) {
 	long ret;
-	syscall(SYSCALL_DEBUG_LOG, &ret, (uint64_t)message, strlen(message));
+	syscall(SYSCALL_SYS_DEBUG_LOG, &ret, (uint64_t)message, strlen(message));
 }
 
 [[noreturn]] void Sysdeps<LibcPanic>::operator()() {
@@ -41,13 +41,13 @@ void Sysdeps<LibcLog>::operator()(const char *message) {
 
 int Sysdeps<TcbSet>::operator()(void *pointer) {
 	long ret;
-	syscall(SYSCALL_TCB_SET, &ret, (uint64_t)pointer);
+	syscall(SYSCALL_SYS_TCB_SET, &ret, (uint64_t)pointer);
 	return ret;
 }
 
 int Sysdeps<Open>::operator()(const char *pathname, int flags, mode_t mode, int *fd) {
 	long ret;
-	bool err = syscall(SYSCALL_OPEN, &ret, (uintptr_t)pathname, strlen(pathname), flags, mode);
+	bool err = syscall(SYSCALL_FS_OPEN, &ret, (uintptr_t)pathname, strlen(pathname), flags, mode);
 	if (err) {
 		return ret;
 	}
@@ -56,7 +56,7 @@ int Sysdeps<Open>::operator()(const char *pathname, int flags, mode_t mode, int 
 };
 int Sysdeps<Read>::operator()(int fd, void *buff, size_t count, ssize_t *bytes_read) {
 	long ret;
-	bool err = syscall(SYSCALL_READ, &ret, fd, (uintptr_t)buff, count);
+	bool err = syscall(SYSCALL_FS_READ, &ret, fd, (uintptr_t)buff, count);
 	if (err) {
 		return ret;
 	}
@@ -65,7 +65,7 @@ int Sysdeps<Read>::operator()(int fd, void *buff, size_t count, ssize_t *bytes_r
 }
 int Sysdeps<Write>::operator()(int fd, const void *buff, size_t count, ssize_t *bytes_written) {
 	long ret;
-	bool err = syscall(SYSCALL_WRITE, &ret, fd, (uintptr_t)buff, count);
+	bool err = syscall(SYSCALL_FS_WRITE, &ret, fd, (uintptr_t)buff, count);
 	if (err) {
 		return ret;
 	}
@@ -74,7 +74,7 @@ int Sysdeps<Write>::operator()(int fd, const void *buff, size_t count, ssize_t *
 }
 int Sysdeps<Close>::operator()(int fd) {
 	long ret;
-	bool err = syscall(SYSCALL_CLOSE, &ret, fd);
+	bool err = syscall(SYSCALL_FS_CLOSE, &ret, fd);
 	if (err) {
 		return ret;
 	}
@@ -83,7 +83,7 @@ int Sysdeps<Close>::operator()(int fd) {
 
 int Sysdeps<Seek>::operator()(int fd, off_t offset, int whence, off_t *new_offset) {
 	long ret;
-	bool err = syscall(SYSCALL_SEEK, &ret, fd, offset, whence);
+	bool err = syscall(SYSCALL_FS_SEEK, &ret, fd, offset, whence);
 	if (err) {
 		return ret;
 	}
@@ -93,7 +93,7 @@ int Sysdeps<Seek>::operator()(int fd, off_t offset, int whence, off_t *new_offse
 
 int Sysdeps<Isatty>::operator()(int fd) {
 	long ret;
-	bool err = syscall(SYSCALL_ISATTY, &ret, fd);
+	bool err = syscall(SYSCALL_FS_ISATTY, &ret, fd);
 	if (err) {
 		return ret;
 	}
@@ -158,4 +158,47 @@ int Sysdeps<Stat>::operator()(
 	STUB_WARN();
 	return ENOSYS;
 }
+
+gid_t Sysdeps<GetGid>::operator()() {
+	long ret;
+	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_GROUP_ID);
+	return ret;
+}
+
+gid_t Sysdeps<GetEgid>::operator()() {
+	long ret;
+	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_EGROUP_ID);
+	return ret;
+}
+
+uid_t Sysdeps<GetUid>::operator()() {
+	long ret;
+	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_USER_ID);
+	return ret;
+}
+
+uid_t Sysdeps<GetEuid>::operator()() {
+	long ret;
+	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_EUSER_ID);
+	return ret;
+}
+
+pid_t Sysdeps<GetPid>::operator()() {
+	long ret;
+	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_PROCESS_ID);
+	return ret;
+}
+
+pid_t Sysdeps<GetPpid>::operator()() {
+	long ret;
+	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_PARENT_PROCESS);
+	return ret;
+}
+
+pid_t Sysdeps<GetTid>::operator()() {
+	long ret;
+	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_THREAD_ID);
+	return ret;
+}
+
 } // namespace mlibc

@@ -23,7 +23,14 @@ struct LunarSysdepTags : LibcPanic,
                          ClockGet,
                          Dup2,
                          Stat,
-                         VmProtect {};
+                         VmProtect,
+                         GetGid,
+                         GetEgid,
+                         GetUid,
+                         GetEuid,
+                         GetPid,
+                         GetPpid,
+                         GetTid {};
 
 template <typename Tag>
 using Sysdeps = SysdepOf<LunarSysdepTags, Tag>;
