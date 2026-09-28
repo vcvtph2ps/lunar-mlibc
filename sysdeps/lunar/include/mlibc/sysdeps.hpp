@@ -30,7 +30,8 @@ struct LunarSysdepTags : LibcPanic,
                          GetEuid,
                          GetPid,
                          GetPpid,
-                         GetTid {};
+                         GetTid,
+                         Fork {};
 
 template <typename Tag>
 using Sysdeps = SysdepOf<LunarSysdepTags, Tag>;

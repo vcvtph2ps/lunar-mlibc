@@ -201,4 +201,14 @@ pid_t Sysdeps<GetTid>::operator()() {
 	return ret;
 }
 
+int Sysdeps<Fork>::operator()(pid_t *pid) {
+	long ret;
+	bool err = syscall(SYSCALL_PROC_FORK, &ret);
+	if (err) {
+		return ret;
+	}
+	*pid = ret;
+	return 0;
+}
+
 } // namespace mlibc
