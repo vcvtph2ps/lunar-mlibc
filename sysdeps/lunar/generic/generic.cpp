@@ -1,5 +1,6 @@
 
 #include <bits/ensure.h>
+#include <cstdint>
 #include <dirent.h>
 #include <errno.h>
 #include <lunar/syscall.h>
@@ -25,13 +26,12 @@
 namespace mlibc {
 
 [[noreturn]] void Sysdeps<Exit>::operator()(int status) {
-	syscall(SYSCALL_PROC_EXIT, NULL, status);
+	syscall(SYSCALL_PROC_EXIT, status);
 	__builtin_unreachable();
 }
 
 void Sysdeps<LibcLog>::operator()(const char *message) {
-	long ret;
-	syscall(SYSCALL_SYS_DEBUG_LOG, &ret, (uint64_t)message, strlen(message));
+	syscall(SYSCALL_SYS_DEBUG_LOG, (uintptr_t)message, strlen(message));
 }
 
 [[noreturn]] void Sysdeps<LibcPanic>::operator()() {
@@ -39,95 +39,68 @@ void Sysdeps<LibcLog>::operator()(const char *message) {
 	sysdep<Exit>(1);
 }
 
+#define SYSCALL_OR_ERROR(...)                                                                      \
+	syscall_result res = syscall(__VA_ARGS__);                                                     \
+	if (res.is_error) {                                                                            \
+		return res.value;                                                                          \
+	}                                                                                              \
+	return 0;
+
+#define SYSCALL_NO_ERROR_RET_VAL(...)                                                              \
+	syscall_result res = syscall(__VA_ARGS__);                                                     \
+	__ensure(!res.is_error && "infallible syscall failed");                                        \
+	return res.value;
+
+#define SYSCALL_OUT_OR_ERROR(x, ...)                                                               \
+	syscall_result res = syscall(__VA_ARGS__);                                                     \
+	if (res.is_error) {                                                                            \
+		return res.value;                                                                          \
+	}                                                                                              \
+	(*x) = res.value;                                                                              \
+	return 0;
+
 int Sysdeps<TcbSet>::operator()(void *pointer) {
 	long ret;
-	syscall(SYSCALL_SYS_TCB_SET, &ret, (uint64_t)pointer);
+	syscall(SYSCALL_SYS_TCB_SET, (uintptr_t)pointer);
 	return ret;
 }
 
 int Sysdeps<Open>::operator()(const char *pathname, int flags, mode_t mode, int *fd) {
-	long ret;
-	bool err = syscall(SYSCALL_FS_OPEN, &ret, (uintptr_t)pathname, strlen(pathname), flags, mode);
-	if (err) {
-		return ret;
-	}
-	*fd = ret;
-	return 0;
-};
+	SYSCALL_OUT_OR_ERROR(fd, SYSCALL_FS_OPEN, (uintptr_t)pathname, strlen(pathname), flags, mode);
+}
+
 int Sysdeps<Read>::operator()(int fd, void *buff, size_t count, ssize_t *bytes_read) {
-	long ret;
-	bool err = syscall(SYSCALL_FS_READ, &ret, fd, (uintptr_t)buff, count);
-	if (err) {
-		return ret;
-	}
-	*bytes_read = ret;
-	return 0;
+	SYSCALL_OUT_OR_ERROR(bytes_read, SYSCALL_FS_READ, fd, (uintptr_t)buff, count);
 }
+
 int Sysdeps<Write>::operator()(int fd, const void *buff, size_t count, ssize_t *bytes_written) {
-	long ret;
-	bool err = syscall(SYSCALL_FS_WRITE, &ret, fd, (uintptr_t)buff, count);
-	if (err) {
-		return ret;
-	}
-	*bytes_written = ret;
-	return 0;
+	SYSCALL_OUT_OR_ERROR(bytes_written, SYSCALL_FS_WRITE, fd, (uintptr_t)buff, count);
 }
-int Sysdeps<Close>::operator()(int fd) {
-	long ret;
-	bool err = syscall(SYSCALL_FS_CLOSE, &ret, fd);
-	if (err) {
-		return ret;
-	}
-	return 0;
-}
+
+int Sysdeps<Close>::operator()(int fd) { SYSCALL_OR_ERROR(SYSCALL_FS_CLOSE, fd); }
 
 int Sysdeps<Seek>::operator()(int fd, off_t offset, int whence, off_t *new_offset) {
-	long ret;
-	bool err = syscall(SYSCALL_FS_SEEK, &ret, fd, offset, whence);
-	if (err) {
-		return ret;
-	}
-	*new_offset = ret;
-	return 0;
+	SYSCALL_OUT_OR_ERROR(new_offset, SYSCALL_FS_SEEK, fd, offset, whence);
 }
 
-int Sysdeps<Isatty>::operator()(int fd) {
-	long ret;
-	bool err = syscall(SYSCALL_FS_ISATTY, &ret, fd);
-	if (err) {
-		return ret;
-	}
-	return 0;
-}
+int Sysdeps<Isatty>::operator()(int fd) { SYSCALL_OR_ERROR(SYSCALL_FS_ISATTY, fd); }
 
 int Sysdeps<VmMap>::operator()(
     void *hint, size_t size, int prot, int flags, int fd, off_t offset, void **window
 ) {
-	long ret;
-	bool err = syscall(SYSCALL_VM_MAP, &ret, (uint64_t)hint, size, prot, flags, fd, offset);
-	if (err) {
-		return ret;
-	}
-	*window = (void *)ret;
+	// @note: we cast to a uintptr_t* from a void** because macro funny :^)
+	SYSCALL_OUT_OR_ERROR(
+	    (uintptr_t *)window, SYSCALL_VM_MAP, (uintptr_t)hint, size, prot, flags, fd, offset
+	);
 	return 0;
 }
 
 int Sysdeps<VmUnmap>::operator()(void *pointer, size_t size) {
-	long ret;
-	bool err = syscall(SYSCALL_VM_UNMAP, &ret, (uint64_t)pointer, size);
-	if (err) {
-		return ret;
-	}
-	return 0;
+	SYSCALL_OR_ERROR(SYSCALL_VM_UNMAP, (uintptr_t)pointer, size);
 }
 
 int Sysdeps<VmProtect>::operator()(void *pointer, size_t size, int prot) {
-	long ret;
-	bool err = syscall(SYSCALL_VM_PROTECT, &ret, (uint64_t)pointer, size, prot);
-	if (err) {
-		return ret;
-	}
-	return 0;
+	SYSCALL_OR_ERROR(SYSCALL_VM_PROTECT, (uintptr_t)pointer, size, prot);
 }
 
 int Sysdeps<AnonAllocate>::operator()(size_t size, void **pointer) {
@@ -160,55 +133,90 @@ int Sysdeps<Stat>::operator()(
 }
 
 gid_t Sysdeps<GetGid>::operator()() {
-	long ret;
-	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_GROUP_ID);
-	return ret;
+	SYSCALL_NO_ERROR_RET_VAL(SYSCALL_PROC_GETINFO, SYSCALL_PROC_GETINFO_GROUP_ID);
 }
 
 gid_t Sysdeps<GetEgid>::operator()() {
-	long ret;
-	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_EGROUP_ID);
-	return ret;
+	SYSCALL_NO_ERROR_RET_VAL(SYSCALL_PROC_GETINFO, SYSCALL_PROC_GETINFO_EGROUP_ID);
 }
 
 uid_t Sysdeps<GetUid>::operator()() {
-	long ret;
-	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_USER_ID);
-	return ret;
+	SYSCALL_NO_ERROR_RET_VAL(SYSCALL_PROC_GETINFO, SYSCALL_PROC_GETINFO_USER_ID);
 }
 
 uid_t Sysdeps<GetEuid>::operator()() {
-	long ret;
-	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_EUSER_ID);
-	return ret;
+	SYSCALL_NO_ERROR_RET_VAL(SYSCALL_PROC_GETINFO, SYSCALL_PROC_GETINFO_EUSER_ID);
 }
 
 pid_t Sysdeps<GetPid>::operator()() {
-	long ret;
-	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_PROCESS_ID);
-	return ret;
+	SYSCALL_NO_ERROR_RET_VAL(SYSCALL_PROC_GETINFO, SYSCALL_PROC_GETINFO_PROCESS_ID);
 }
 
 pid_t Sysdeps<GetPpid>::operator()() {
-	long ret;
-	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_PARENT_PROCESS);
-	return ret;
+	SYSCALL_NO_ERROR_RET_VAL(SYSCALL_PROC_GETINFO, SYSCALL_PROC_GETINFO_PARENT_PROCESS);
 }
 
 pid_t Sysdeps<GetTid>::operator()() {
-	long ret;
-	syscall(SYSCALL_PROC_GETINFO, &ret, SYSCALL_PROC_GETINFO_THREAD_ID);
-	return ret;
+	SYSCALL_NO_ERROR_RET_VAL(SYSCALL_PROC_GETINFO, SYSCALL_PROC_GETINFO_THREAD_ID);
 }
 
-int Sysdeps<Fork>::operator()(pid_t *pid) {
-	long ret;
-	bool err = syscall(SYSCALL_PROC_FORK, &ret);
-	if (err) {
-		return ret;
-	}
-	*pid = ret;
-	return 0;
+int Sysdeps<Fork>::operator()(pid_t *pid) { SYSCALL_OUT_OR_ERROR(pid, SYSCALL_PROC_FORK); }
+
+int Sysdeps<Kill>::operator()(pid_t pid, int signal) {
+	SYSCALL_OR_ERROR(SYSCALL_PROC_SIG_SEND_SIMPLE, pid, UINT64_MAX, signal);
 }
+
+int Sysdeps<Tgkill>::operator()(int pid, int tid, int signal) {
+	SYSCALL_OR_ERROR(SYSCALL_PROC_SIG_SEND_SIMPLE, pid, tid, signal);
+}
+
+int Sysdeps<Sigprocmask>::operator()(
+    int how, const sigset_t *__restrict set, sigset_t *__restrict retrieve
+) {
+	SYSCALL_OR_ERROR(SYSCALL_PROC_SIG_MASK, how, (uintptr_t)set, (uintptr_t)retrieve);
+}
+
+int Sysdeps<Sigaltstack>::operator()(const stack_t *ss, stack_t *oss) {
+	SYSCALL_OR_ERROR(SYSCALL_PROC_SIG_ALT_STACK, (uintptr_t)ss, (uintptr_t)oss);
+}
+
+int Sysdeps<Sigtimedwait>::operator()(
+    const sigset_t *__restrict set,
+    siginfo_t *__restrict info,
+    const struct timespec *__restrict timeout,
+    int *out_signal
+) {
+	SYSCALL_OUT_OR_ERROR(
+	    out_signal, SYSCALL_PROC_SIG_WAIT, (uintptr_t)set, (uintptr_t)info, (uintptr_t)timeout
+	);
+}
+
+int Sysdeps<Sigsuspend>::operator()(const sigset_t *set) {
+	SYSCALL_OR_ERROR(SYSCALL_PROC_SIG_SUSPEND, (uintptr_t)set);
+}
+
+int Sysdeps<Sigpending>::operator()(sigset_t *set) {
+	SYSCALL_OR_ERROR(SYSCALL_PROC_SIG_PENDING, (uintptr_t)set);
+}
+
+int Sysdeps<Sigqueue>::operator()(pid_t pid, int sig, const union sigval val) {
+	SYSCALL_OR_ERROR(SYSCALL_PROC_SIG_QUEUE, pid, sig, (size_t)val.sival_ptr);
+}
+
+#if !defined(MLIBC_BUILDING_RTLD)
+extern "C" void __mlibc_restorer();
+
+int Sysdeps<Sigaction>::operator()(
+    int sig, const struct sigaction *__restrict act, struct sigaction *__restrict oldact
+) {
+	struct sigaction action;
+	if (act != nullptr) {
+		memcpy(&action, act, sizeof(struct sigaction));
+		action.sa_restorer = __mlibc_restorer;
+	}
+
+	SYSCALL_OR_ERROR(SYSCALL_PROC_SIG_ACTION, sig, act ? (uintptr_t)&action : 0, (uintptr_t)oldact);
+}
+#endif
 
 } // namespace mlibc
