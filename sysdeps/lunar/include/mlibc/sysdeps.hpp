@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mlibc/sysdep-tags.hpp"
 #include <mlibc/sysdep-signatures.hpp>
 
 namespace mlibc {
@@ -31,7 +32,16 @@ struct LunarSysdepTags : LibcPanic,
                          GetPid,
                          GetPpid,
                          GetTid,
-                         Fork {};
+                         Fork,
+                         Kill,
+                         Tgkill,
+                         Sigprocmask,
+                         Sigaction,
+                         Sigtimedwait,
+                         Sigaltstack,
+                         Sigsuspend,
+                         Sigpending,
+                         Sigqueue {};
 
 template <typename Tag>
 using Sysdeps = SysdepOf<LunarSysdepTags, Tag>;

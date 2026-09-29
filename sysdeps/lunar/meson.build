@@ -10,6 +10,7 @@ rtld_sources += files('generic/generic.cpp')
 libc_sources += files(
     'generic/entry.cpp',
     'generic/generic.cpp',
+    host_machine.cpu_family() / 'signal.S',
 )
 
 if not no_headers
@@ -81,7 +82,7 @@ if not headers_only
         'crt1',
         build_by_default: true,
         command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
-        input: 'crt-x86_64/crt1.S',
+        input: host_machine.cpu_family() / 'crt1.S',
         output: 'crt1.o',
         install: true,
         install_dir: get_option('libdir'),
@@ -91,7 +92,7 @@ if not headers_only
         'Scrt1',
         build_by_default: true,
         command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
-        input: 'crt-x86_64/crt1.S',
+        input: host_machine.cpu_family() / 'crt1.S',
         output: 'Scrt1.o',
         install: true,
         install_dir: get_option('libdir'),
@@ -101,7 +102,7 @@ if not headers_only
         'crti',
         build_by_default: true,
         command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
-        input: 'crt-x86_64/crti.S',
+        input: host_machine.cpu_family() / 'crti.S',
         output: 'crti.o',
         install: true,
         install_dir: get_option('libdir'),
@@ -111,7 +112,7 @@ if not headers_only
         'crtn',
         build_by_default: true,
         command: c_compiler.cmd_array() + ['-c', '-o', '@OUTPUT@', '@INPUT@'],
-        input: 'crt-x86_64/crtn.S',
+        input: host_machine.cpu_family() / 'crtn.S',
         output: 'crtn.o',
         install: true,
         install_dir: get_option('libdir'),
