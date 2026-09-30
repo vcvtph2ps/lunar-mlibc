@@ -201,6 +201,24 @@ int Sysdeps<Sigqueue>::operator()(pid_t pid, int sig, const union sigval val) {
 	SYSCALL_OR_ERROR(SYSCALL_PROC_SIG_QUEUE, pid, sig, (size_t)val.sival_ptr);
 }
 
+int
+Sysdeps<Waitpid>::operator()(pid_t pid, int *status, int flags, struct rusage *ru, pid_t *ret_pid) {
+	if (ru) {
+		mlibc::infoLogger() << "mlibc: struct rusage in sys_waitpid is unsupported" << frg::endlog;
+		return ENOSYS;
+	}
+
+again:
+	auto r = syscall(SYSCALL_PROC_WAITPID, pid, (size_t)status, flags, (size_t)ru);
+	if (r.is_error) {
+		if (r.value == EINTR)
+			goto again;
+		return r.value;
+	}
+	*ret_pid = (pid_t)r.value;
+	return 0;
+}
+
 #if !defined(MLIBC_BUILDING_RTLD)
 extern "C" void __mlibc_restorer();
 
