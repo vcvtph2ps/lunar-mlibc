@@ -60,9 +60,7 @@ void Sysdeps<LibcLog>::operator()(const char *message) {
 	return 0;
 
 int Sysdeps<TcbSet>::operator()(void *pointer) {
-	long ret;
-	syscall(SYSCALL_SYS_TCB_SET, (uintptr_t)pointer);
-	return ret;
+	SYSCALL_OR_ERROR(SYSCALL_SYS_TCB_SET, (uintptr_t)pointer);
 }
 
 int Sysdeps<Open>::operator()(const char *pathname, int flags, mode_t mode, int *fd) {
