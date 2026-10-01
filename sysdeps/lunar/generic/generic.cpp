@@ -159,6 +159,12 @@ pid_t Sysdeps<GetTid>::operator()() {
 }
 
 int Sysdeps<Fork>::operator()(pid_t *pid) { SYSCALL_OUT_OR_ERROR(pid, SYSCALL_PROC_FORK); }
+int Sysdeps<Execve>::operator()(const char *path, char *const argv[], char *const envp[]) {
+	SYSCALL_OR_ERROR(SYSCALL_PROC_EXECVE, (uintptr_t)path, (uintptr_t)argv, (uintptr_t)envp);
+}
+int Sysdeps<Fexecve>::operator()(int fd, char *const argv[], char *const envp[]) {
+	SYSCALL_OR_ERROR(SYSCALL_PROC_FEXECVE, fd, (uintptr_t)argv, (uintptr_t)envp);
+}
 
 int Sysdeps<Kill>::operator()(pid_t pid, int signal) {
 	SYSCALL_OR_ERROR(SYSCALL_PROC_SIG_SEND_SIMPLE, pid, UINT64_MAX, signal);
