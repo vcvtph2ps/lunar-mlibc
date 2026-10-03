@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mlibc/sysdep-tags.hpp"
 #include <mlibc/sysdep-signatures.hpp>
+#include <mlibc/sysdep-tags.hpp>
 
 namespace mlibc {
 
@@ -32,6 +32,8 @@ struct LunarSysdepTags : LibcPanic,
                          GetPid,
                          GetPpid,
                          GetTid,
+                         GetPgid,
+                         SetPgid,
                          Fork,
                          Kill,
                          Tgkill,
