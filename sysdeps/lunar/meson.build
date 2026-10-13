@@ -10,6 +10,7 @@ rtld_sources += files('generic/generic.cpp')
 libc_sources += files(
     'generic/entry.cpp',
     'generic/generic.cpp',
+    'generic/mount.cpp',
     host_machine.cpu_family() / 'signal.S',
 )
 
@@ -73,7 +74,7 @@ if not no_headers
         follow_symlinks: true,
     )
     install_headers('include/lunar/syscall.h', subdir: 'lunar', follow_symlinks: true)
-    install_headers('include/sys/sysmacros.h', subdir: 'sys')
+    install_headers('include/sys/sysmacros.h', 'include/sys/mount.h', subdir: 'sys')
 endif
 
 if not headers_only
