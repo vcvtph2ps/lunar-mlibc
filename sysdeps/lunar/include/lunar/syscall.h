@@ -50,6 +50,8 @@
 #define SYSCALL_FS_WRITE 43
 #define SYSCALL_FS_SEEK 44
 #define SYSCALL_FS_ISATTY 45
+#define SYSCALL_FS_MOUNT 46
+#define SYSCALL_FS_UNMOUNT 47
 
 #if !defined(__ASSEMBLER__)
 

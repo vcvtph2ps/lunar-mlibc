@@ -150,17 +150,12 @@ struct sigaction {
 	int sa_flags;
 };
 
-#if defined(__x86_64__) || defined(__aarch64__) || (defined(__riscv) && __riscv_xlen == 64)
-/* TODO: This is wrong for AArch64. */
+#if defined(__x86_64__) || (defined(__riscv) && __riscv_xlen == 64)
 
 typedef struct {
-	unsigned long oldmask;
 	unsigned long gregs[16];
-	unsigned long pc, pr, sr;
-	unsigned long gbr, mach, macl;
-	unsigned long fpregs[16];
-	unsigned long xfpregs[16];
-	unsigned int fpscr, fpul, ownedfp;
+	unsigned long pc;
+	unsigned long flags;
 } mcontext_t;
 
 typedef struct __ucontext {
