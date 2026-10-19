@@ -5,12 +5,21 @@ sysdep_supported_options = {
     'bsd': true,
 }
 
-rtld_sources += files('generic/generic.cpp')
+rtld_sources += files(
+    'generic/sysdeps/fs.cpp',
+    'generic/sysdeps/generic.cpp',
+    'generic/sysdeps/memory.cpp',
+    'generic/sysdeps/process.cpp',
+)
 
 libc_sources += files(
     'generic/entry.cpp',
-    'generic/generic.cpp',
-    'generic/mount.cpp',
+    'generic/sysdeps/generic.cpp',
+    'generic/sysdeps/fs.cpp',
+    'generic/sysdeps/memory.cpp',
+    'generic/sysdeps/mount.cpp',
+    'generic/sysdeps/process.cpp',
+    'generic/sysdeps/signal.cpp',
     host_machine.cpu_family() / 'signal.S',
 )
 
