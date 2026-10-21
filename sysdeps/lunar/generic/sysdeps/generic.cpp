@@ -14,7 +14,7 @@ namespace mlibc {
 }
 
 void Sysdeps<LibcLog>::operator()(const char *message) {
-	syscall(SYSCALL_SYS_DEBUG_LOG, (uintptr_t)message, strlen(message));
+	syscall(SYSCALL_SYS_DEBUG_LOG, (uintptr_t)message);
 }
 
 [[noreturn]] void Sysdeps<LibcPanic>::operator()() {
