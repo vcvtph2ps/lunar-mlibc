@@ -5,7 +5,7 @@
 namespace mlibc {
 
 int Sysdeps<Open>::operator()(const char *pathname, int flags, mode_t mode, int *fd) {
-	SYSCALL_OUT_OR_ERROR(fd, SYSCALL_FS_OPEN, (uintptr_t)pathname, strlen(pathname), flags, mode);
+	SYSCALL_OUT_OR_ERROR(fd, SYSCALL_FS_OPEN, (uintptr_t)pathname, flags, mode);
 }
 
 int Sysdeps<Read>::operator()(int fd, void *buff, size_t count, ssize_t *bytes_read) {
