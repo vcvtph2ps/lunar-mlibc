@@ -49,6 +49,10 @@ int Sysdeps<Dup2>::operator()(int fd, int flags, int newfd) {
 	SYSCALL_OR_ERROR(SYSCALL_FS_DUP2, fd, flags, newfd);
 }
 
+int Sysdeps<ReadEntries>::operator()(int fd, void *buffer, size_t max_size, size_t *bytes_read) {
+	SYSCALL_OUT_OR_ERROR(bytes_read, SYSCALL_FS_GETDENTS, fd, (uintptr_t)buffer, max_size);
+}
+
 int Sysdeps<Stat>::operator()(
     fsfd_target fsfdt, int fd, const char *path, int flags, struct stat *statbuf
 ) {
