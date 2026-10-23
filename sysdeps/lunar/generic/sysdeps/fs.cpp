@@ -53,6 +53,20 @@ int Sysdeps<ReadEntries>::operator()(int fd, void *buffer, size_t max_size, size
 	SYSCALL_OUT_OR_ERROR(bytes_read, SYSCALL_FS_GETDENTS, fd, (uintptr_t)buffer, max_size);
 }
 
+int Sysdeps<Readlinkat>::operator()(
+    int dirfd, const char *path, void *buffer, size_t max_size, ssize_t *length
+) {
+	SYSCALL_OUT_OR_ERROR(
+	    length, SYSCALL_FS_READLINKAT, dirfd, (uintptr_t)path, (uintptr_t)buffer, max_size
+	);
+}
+
+int Sysdeps<Readlink>::operator()(
+    const char *path, void *buffer, size_t max_size, ssize_t *length
+) {
+	return sysdep<Readlinkat>(AT_FDCWD, path, buffer, max_size, length);
+}
+
 int Sysdeps<Stat>::operator()(
     fsfd_target fsfdt, int fd, const char *path, int flags, struct stat *statbuf
 ) {

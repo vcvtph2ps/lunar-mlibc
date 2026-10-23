@@ -59,6 +59,7 @@
 #define SYSCALL_FS_DUP 52
 #define SYSCALL_FS_DUP2 53
 #define SYSCALL_FS_GETDENTS 54
+#define SYSCALL_FS_READLINKAT 55
 
 #if !defined(__ASSEMBLER__)
 
