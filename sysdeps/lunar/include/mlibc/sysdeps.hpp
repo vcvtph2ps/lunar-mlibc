@@ -53,7 +53,8 @@ struct LunarSysdepTags : LibcPanic,
                          Sigqueue,
                          Waitpid,
                          Execve,
-                         Fexecve {};
+                         Fexecve,
+                         Uname {};
 
 template <typename Tag>
 using Sysdeps = SysdepOf<LunarSysdepTags, Tag>;

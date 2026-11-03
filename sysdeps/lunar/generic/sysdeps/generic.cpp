@@ -31,4 +31,8 @@ int Sysdeps<ClockGet>::operator()(int clock, time_t *secs, long *nanos) {
 	return ENOSYS;
 }
 
+int Sysdeps<Uname>::operator()(struct utsname *buf) {
+	SYSCALL_OR_ERROR(SYSCALL_SYS_UNAME, (uintptr_t)buf);
+}
+
 } // namespace mlibc
