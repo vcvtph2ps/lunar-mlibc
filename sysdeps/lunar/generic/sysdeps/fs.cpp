@@ -67,6 +67,10 @@ int Sysdeps<Readlink>::operator()(
 	return sysdep<Readlinkat>(AT_FDCWD, path, buffer, max_size, length);
 }
 
+int Sysdeps<Ftruncate>::operator()(int fd, size_t size) {
+	SYSCALL_OR_ERROR(SYSCALL_FS_FTRUNCATE, fd, size);
+}
+
 int Sysdeps<Stat>::operator()(
     fsfd_target fsfdt, int fd, const char *path, int flags, struct stat *statbuf
 ) {

@@ -54,6 +54,7 @@ struct LunarSysdepTags : LibcPanic,
                          Waitpid,
                          Execve,
                          Fexecve,
+                         Ftruncate,
                          Uname {};
 
 template <typename Tag>
