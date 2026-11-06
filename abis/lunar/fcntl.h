@@ -2,6 +2,7 @@
 #define _ABIBITS_FCNTL_H
 
 #include <abi-bits/pid_t.h>
+#include <bits/off_t.h>
 #include <mlibc-config.h>
 
 #define O_RDONLY (1 << 0)
@@ -104,5 +105,25 @@ struct f_owner_ex {
 #define POSIX_FADV_WILLNEED 3
 #define POSIX_FADV_DONTNEED 4
 #define POSIX_FADV_NOREUSE 5
+
+/* WARNING: keep `flock` and `flock64` in sync or bad things will happen! */
+
+struct flock {
+	short l_type;
+	short l_whence;
+	off_t l_start;
+	off_t l_len;
+	pid_t l_pid;
+};
+
+#if __MLIBC_LINUX_OPTION && defined(_LARGEFILE64_SOURCE)
+struct flock64 {
+	short l_type;
+	short l_whence;
+	off_t l_start;
+	off_t l_len;
+	pid_t l_pid;
+};
+#endif /* __MLIBC_LINUX_OPTION && defined(_LARGEFILE64_SOURCE) */
 
 #endif /* _ABIBITS_FCNTL_H */
