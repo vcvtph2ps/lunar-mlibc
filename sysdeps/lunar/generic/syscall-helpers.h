@@ -20,7 +20,9 @@
 	if (res.is_error) {                                                                            \
 		return res.value;                                                                          \
 	}                                                                                              \
-	(*x) = res.value;                                                                              \
+	if (x) {                                                                                       \
+		(*x) = res.value;                                                                          \
+	}                                                                                              \
 	return 0;
 
 #define STUB()                                                                                     \

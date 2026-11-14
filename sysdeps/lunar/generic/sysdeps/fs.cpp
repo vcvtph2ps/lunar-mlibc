@@ -1,9 +1,11 @@
 #include "abi-bits/fcntl.h"
+#include "abi-bits/ioctls.h"
 #include "frg/logging.hpp"
 #include "lunar/syscall.h"
 #include "mlibc/debug.hpp"
 #include "mlibc/fsfd_target.hpp"
 #include "mlibc/sysdep-tags.hpp"
+#include <errno.h>
 #include <mlibc/all-sysdeps.hpp>
 #include <string.h>
 #include <sysdeps/lunar/generic/syscall-helpers.h>
@@ -32,7 +34,13 @@ int Sysdeps<Seek>::operator()(int fd, off_t offset, int whence, off_t *new_offse
 	SYSCALL_OUT_OR_ERROR(new_offset, SYSCALL_FS_SEEK, fd, offset, whence);
 }
 
-int Sysdeps<Isatty>::operator()(int fd) { SYSCALL_OR_ERROR(SYSCALL_FS_ISATTY, fd); }
+int Sysdeps<Isatty>::operator()(int fd) {
+	struct winsize ws;
+	if (!sysdep<Ioctl>(fd, TIOCGWINSZ, &ws, nullptr))
+		return 0;
+	return ENOTTY;
+}
+
 int Sysdeps<GetCwd>::operator()(char *buffer, size_t size) {
 	SYSCALL_OR_ERROR(SYSCALL_FS_GETCWD, (uintptr_t)buffer, size);
 }
@@ -61,9 +69,8 @@ int Sysdeps<Readlinkat>::operator()(
 	);
 }
 
-int Sysdeps<Readlink>::operator()(
-    const char *path, void *buffer, size_t max_size, ssize_t *length
-) {
+int
+Sysdeps<Readlink>::operator()(const char *path, void *buffer, size_t max_size, ssize_t *length) {
 	return sysdep<Readlinkat>(AT_FDCWD, path, buffer, max_size, length);
 }
 
@@ -97,6 +104,10 @@ int Sysdeps<Stat>::operator()(
 	}
 
 	return res.value;
+}
+
+int Sysdeps<Ioctl>::operator()(int fd, unsigned long request, void *arg, int *result) {
+	SYSCALL_OUT_OR_ERROR(result, SYSCALL_FS_IOCTL, fd, request, (uintptr_t)arg);
 }
 
 }; // namespace mlibc
