@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <lunar/syscall.h>
 #include <mlibc/all-sysdeps.hpp>
+#include <mlibc/tcb.hpp>
 #include <string.h>
 #include <sysdeps/lunar/generic/syscall-helpers.h>
 
@@ -23,7 +24,13 @@ void Sysdeps<LibcLog>::operator()(const char *message) {
 }
 
 int Sysdeps<TcbSet>::operator()(void *pointer) {
+#if defined(__riscv) && __riscv_xlen == 64
+	uintptr_t thread_data = reinterpret_cast<uintptr_t>(pointer) + sizeof(Tcb);
+	asm volatile("mv tp, %0" ::"r"(thread_data));
+	return 0;
+#else
 	SYSCALL_OR_ERROR(SYSCALL_SYS_TCB_SET, (uintptr_t)pointer);
+#endif
 }
 
 int Sysdeps<ClockGet>::operator()(int clock, time_t *secs, long *nanos) {

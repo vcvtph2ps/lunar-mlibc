@@ -153,7 +153,11 @@ struct sigaction {
 #if defined(__x86_64__) || (defined(__riscv) && __riscv_xlen == 64)
 
 typedef struct {
+#if defined(__x86_64__)
 	unsigned long gregs[16];
+#elif defined(__riscv) && __riscv_xlen == 64
+	unsigned long gregs[32];
+#endif
 	unsigned long pc;
 	unsigned long flags;
 } mcontext_t;
