@@ -1,0 +1,72 @@
+#pragma once
+
+#include <mlibc/sysdep-signatures.hpp>
+#include <mlibc/sysdep-tags.hpp>
+
+namespace mlibc {
+
+struct LunarSysdepTags : LibcPanic,
+                         LibcLog,
+                         Isatty,
+                         Write,
+                         TpSet,
+                         AnonAllocate,
+                         AnonFree,
+                         Seek,
+                         Exit,
+                         Close,
+                         ReadEntries,
+                         FutexWake,
+                         FutexWait,
+                         Read,
+                         Readlink,
+                         Readlinkat,
+                         Open,
+                         OpenDir,
+                         Dup,
+                         VmMap,
+                         VmUnmap,
+                         ClockGet,
+                         GetCwd,
+                         Chdir,
+                         Dup2,
+                         Stat,
+                         VmProtect,
+                         GetGid,
+                         GetEgid,
+                         GetUid,
+                         GetEuid,
+                         GetPid,
+                         GetPpid,
+                         GetTid,
+                         GetPgid,
+                         SetPgid,
+                         Fork,
+                         Kill,
+                         Tgkill,
+                         Sigprocmask,
+                         Sigaction,
+                         Sigtimedwait,
+                         Sigaltstack,
+                         Sigsuspend,
+                         Sigpending,
+                         Sigqueue,
+                         Waitpid,
+                         Execve,
+                         Fexecve,
+                         Ftruncate,
+                         Uname,
+                         Pipe,
+                         Ioctl,
+                         Fcntl,
+                         Access,
+                         Faccessat {};
+
+template <typename Tag>
+using Sysdeps = SysdepOf<LunarSysdepTags, Tag>;
+
+struct SysdepTraits {
+	static constexpr bool usesRtNetlink = false;
+};
+
+} // namespace mlibc
