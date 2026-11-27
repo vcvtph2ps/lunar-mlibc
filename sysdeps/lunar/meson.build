@@ -15,6 +15,7 @@ rtld_sources += files(
 libc_sources += files(
     'generic/entry.cpp',
     'generic/sysdeps/generic.cpp',
+    'generic/sysdeps/tty.cpp',
     'generic/sysdeps/fs.cpp',
     'generic/sysdeps/memory.cpp',
     'generic/sysdeps/mount.cpp',

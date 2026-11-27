@@ -34,13 +34,6 @@ int Sysdeps<Seek>::operator()(int fd, off_t offset, int whence, off_t *new_offse
 	SYSCALL_OUT_OR_ERROR(new_offset, SYSCALL_FS_SEEK, fd, offset, whence);
 }
 
-int Sysdeps<Isatty>::operator()(int fd) {
-	struct winsize ws;
-	if (!sysdep<Ioctl>(fd, TIOCGWINSZ, &ws, nullptr))
-		return 0;
-	return ENOTTY;
-}
-
 int Sysdeps<GetCwd>::operator()(char *buffer, size_t size) {
 	SYSCALL_OR_ERROR(SYSCALL_FS_GETCWD, (uintptr_t)buffer, size);
 }

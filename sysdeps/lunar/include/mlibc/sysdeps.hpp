@@ -60,7 +60,9 @@ struct LunarSysdepTags : LibcPanic,
                          Ioctl,
                          Fcntl,
                          Access,
-                         Faccessat {};
+                         Faccessat,
+                         Tcgetattr,
+                         Tcsetattr {};
 
 template <typename Tag>
 using Sysdeps = SysdepOf<LunarSysdepTags, Tag>;
